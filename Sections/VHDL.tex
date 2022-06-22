@@ -1,0 +1,146 @@
+\section{VHDL}
+Jede VHDL Datei ist durch \textit{Library, Entity, Architecture} definiert. \textbf{Identifier} sind definiert durch:
+\begin{itemize}[nosep]
+	\item a..zA..Z0..9\_
+	\item Start mit Buchstabe
+	\item Case insensitive
+	\item kein Schlüsselwort
+\end{itemize}
+
+\subsection{Library}
+Eine Library ist eine Sammlung allgemeiner verwendeten, kompilierten und direkt ausführbaren Code-Blöcken. Dies erlaubt die Wiederverwendung von Code in verschiedenen Projekten.
+
+\begin{lstlisting}
+	library ieee; -- ieee standard und work library ohne qualifier verwendbar
+	library ams_lib; -- Hersteller spezifische library, Xilinx
+	s := ams_lib.tech_data.const1;
+	
+	-- ohne qualifier nur mit "use" verwendbar
+	use ams_lib.tech_data.all;
+	s := const1;
+\end{lstlisting}
+
+
+\subsection{Entity}
+Entity beschreibt eine Designeinheit als Black-Box. Im Fokus steht die Schnittstelle einer Entwurfseinheit nach aussen, sogennante \textbf{Ports}. Signale dürfen \underline{nicht} in der Port-Liste initialisiert werden.
+
+\begin{lstlisting}
+	entity <name> is 
+	  port (
+	    {<port_name> : <mode> <type>; }
+	  );
+	end <name>;
+\end{lstlisting}
+\noindent\textit{mode}
+\begin{itemize}[nosep]
+	\item \textbf{in}: Eingangsignal darf nur auf rechter Seite stehen
+	\item \textbf{out}: Ausgangssignal darf nur auf linker Seite stehen
+	\item \textbf{inout}: Bidirektionale Signale, wird mit \textit{std\_logic} verwendet
+\end{itemize}
+
+\noindent\textit{type}
+\begin{itemize}[nosep]
+	\item \textbf{boolean}: \textit{true}, \textit{false}
+	\item \textbf{bit}: \textit{'1'}, \textit{'0'}
+	\item \textbf{bit\_vector}: eindimensionaler Array von Bits
+	\item \textbf{integer}: interne Darstellung von 32 bit Zahlen
+\end{itemize}
+
+\subsection{Architecture}
+Die architecture beschreibt den inneren Aufbau der Funktionalität, wobei zu einer Entity mehrere Architekturen gehören können. \textbf{Best Practice}: arch\_name ist oft einer der folgenden:
+\begin{itemize}[nosep]
+	\item \textbf{structural}: Ein und Ausgänge von Komponenten, die in einer Bibliotek abgelegt sind, mit lokalen Signalen verbinden. Netzliste aufbauen
+	\item \textbf{behavioral}: Modellierung von Funktionalität
+	\item \textbf{tb}: Test Beschreibung, modelliert nur Test-Setup
+\end{itemize}
+
+\begin{lstlisting}
+	architecture <arch_name> of <entity_name> is
+	-- Deklerationen...
+	[type_decl]
+	[subtype_decl]
+	[constant_decl]
+	[signal_decl]
+	[component_decl]
+	begin
+	-- Anweisungen...
+	end [<arch_name>];
+\end{lstlisting}
+
+\subsubsection{Component}
+Komponenten (Entities) die innerhalb der Architektur instanziirt werden sollen, müssen deklariert sein.
+\begin{lstlisting}
+	component <name>
+		port(...)
+\end{lstlisting}
+
+\subsubsection{Signal}
+Interne Signale müssen in der Architecture definiert sein
+\begin{lstlisting}
+	signal <name> : <type>
+\end{lstlisting}
+
+\subsection{Prozesse}
+Ein Prozess wird aktiviert, wenn ein Signal in der \textit{sensitivity list} geändert wird. Falls keine sensitivity Liste vorhanden ist, ist der Prozess IMMER aktiv (was nur in TB mit WAIT Statements benötigt wird). Signale werden am ende des Prozess geschrieben. 
+\begin{lstlisting}
+	[<label>:] process[<sensitivity list>]
+	-- Deklerationen...
+	[type_decl]
+	[subtype_decl]
+	[constant_decl]
+	[signal_decl]
+	[component_decl]
+	begin
+	-- Sequentielle Anweisungen...
+	end process [<label>];
+\end{lstlisting}
+
+\subsection{Variable}
+Variable sind nur innerhalb von Prozessen gültig. Sie sind nach Zuweisung sofort gültig und müssen nicht auf nächste Prozess Aktivierung warten. Diese sollten immer initialisiert werden, da ansonsten ein D-Latch erstellt wird.
+\begin{lstlisting}
+	variable <name>: <type> [:= <expression>]
+\end{lstlisting}
+
+\subsection{Type}
+Aufzählungen werden von links nach rechts codiert zB mit Draycode. Angefangen mit $0$ bis $n$. Diese können in Vivado mit der entsprechende Option festgelegt werden (\textit{fsm\_extraction}).
+\begin{lstlisting}
+	type <type_name> is ({<identifier> ,?})
+\end{lstlisting}
+
+\subsection{Anweisungen}
+\subsubsection{If}
+If Anweisungen unbedingt mit else abschliessen, ansonsten wird ein Latch erstellt, welcher Hardware-Platz und zusätzliches Timing benötigt.
+\begin{lstlisting}
+	[<label>:]if <condition> then
+		{sequential statements}
+	elseif <condition> then
+	 	{sequential statements}
+ 	else
+ 		{sequential statements}
+	end if;
+\end{lstlisting}
+
+\subsubsection{case}
+Case immer mit \textit{when others} abschliessen, siehe if.
+\begin{lstlisting}
+	[<label>:]case <condition> is
+	{when <choice> => <sequential statement>;}
+	when others => <sequential statements>;
+	end case;
+\end{lstlisting}
+
+\subsubsection{Zuweisung}
+Ein \textit{signal} wird der Wert zugewiesen. Bit-Konstante sind mit ' und Vektoren mit \"\ zuzuweisen. Mit concatenate '\&' können signale verbunden werden. 
+\begin{lstlisting}
+	[<label>:]<signal> <= expression | "1010" | sig1 & "00" | (1=>s(1), 0 => s(0), others => '0') 
+\end{lstlisting}
+Selektive Zuweisung, sind typisch für kombinatorische Logik mit Verzweigung, müssen alle angegeben werden (mit others). Typisch für Multiplexer.
+\begin{lstlisting}
+	with <select_sig> select <ausgang_sig> <= 
+		{ <eingang_sig> when "00", }
+		when others;
+\end{lstlisting}
+\begin{lstlisting}
+	<ausgang_sig> <= { <eingang_sig> when "00" else };
+\end{lstlisting}
+Diese zwei sind nicht identisch, weil erste parallel ausgeführt, während letztere sequentiell ausgewertet werden, was grossen Einfluss auf Laufzeit hat.
