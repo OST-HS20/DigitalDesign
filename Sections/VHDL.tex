@@ -12,12 +12,8 @@ Eine Library ist eine Sammlung allgemeiner verwendeten, kompilierten und direkt 
 
 \begin{lstlisting}
 	library ieee; -- ieee standard und work library ohne qualifier verwendbar
-	library ams_lib; -- Hersteller spezifische library, Xilinx
-	s := ams_lib.tech_data.const1;
-	
-	-- ohne qualifier nur mit "use" verwendbar
-	use ams_lib.tech_data.all;
-	s := const1;
+	use ieee.std_logic_1164.all;
+	use ieee.numeric_std.all;
 \end{lstlisting}
 
 
@@ -36,14 +32,6 @@ Entity beschreibt eine Designeinheit als Black-Box. Im Fokus steht die Schnittst
 	\item \textbf{in}: Eingangsignal darf nur auf rechter Seite stehen
 	\item \textbf{out}: Ausgangssignal darf nur auf linker Seite stehen
 	\item \textbf{inout}: Bidirektionale Signale, wird mit \textit{std\_logic} verwendet
-\end{itemize}
-
-\noindent\textit{type}
-\begin{itemize}[nosep]
-	\item \textbf{boolean}: \textit{true}, \textit{false}
-	\item \textbf{bit}: \textit{'1'}, \textit{'0'}
-	\item \textbf{bit\_vector}: eindimensionaler Array von Bits
-	\item \textbf{integer}: interne Darstellung von 32 bit Zahlen
 \end{itemize}
 
 \subsection{Architecture}
@@ -110,24 +98,9 @@ Aufzählungen werden von links nach rechts codiert zB mit Draycode. Angefangen m
 \subsection{Anweisungen}
 \subsubsection{If}
 If Anweisungen unbedingt mit else abschliessen, ansonsten wird ein Latch erstellt, welcher Hardware-Platz und zusätzliches Timing benötigt.
-\begin{lstlisting}
-	[<label>:]if <condition> then
-		{sequential statements}
-	elseif <condition> then
-	 	{sequential statements}
- 	else
- 		{sequential statements}
-	end if;
-\end{lstlisting}
 
 \subsubsection{case}
 Case immer mit \textit{when others} abschliessen, siehe if.
-\begin{lstlisting}
-	[<label>:]case <condition> is
-	{when <choice> => <sequential statement>;}
-	when others => <sequential statements>;
-	end case;
-\end{lstlisting}
 
 \subsubsection{Zuweisung}
 Ein \textit{signal} wird der Wert zugewiesen. Bit-Konstante sind mit ' und Vektoren mit \"\ zuzuweisen. Mit concatenate '\&' können signale verbunden werden. 
